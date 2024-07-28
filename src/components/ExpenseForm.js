@@ -11,8 +11,7 @@ const currencySymbols = {
     USD: '$',
     EUR: '€',
     GBP: '£',
-    JPY: '¥',
-    INR: '₹'
+    JPY: '¥'
 };
 
 function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, expenses, currency }) {

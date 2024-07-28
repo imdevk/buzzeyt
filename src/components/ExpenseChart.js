@@ -8,8 +8,7 @@ const currencySymbols = {
     USD: '$',
     EUR: '€',
     GBP: '£',
-    JPY: '¥',
-    INR: '₹'
+    JPY: '¥'
 };
 
 function ExpenseChart({ expenses, currency }) {
@@ -23,12 +22,20 @@ function ExpenseChart({ expenses, currency }) {
 
         if (viewMode === 'daily') {
             createDailyBarChart();
+            createCategoryPieChart(expenses);
         } else {
             createMonthlyBarChart();
+            createCategoryPieChart(groupExpensesByMonth());
         }
+    }, [expenses, viewMode, currency]);
 
-        createCategoryPieChart();
-    }, [expenses, viewMode]);
+    const groupExpensesByMonth = () => {
+        return Array.from(d3.rollup(
+            expenses,
+            v => ({ amount: d3.sum(v, d => d.amount), category: v[0].category }),
+            d => d.date.slice(0, 7)
+        )).flatMap(([, value]) => value);
+    };
 
     const createDailyBarChart = () => {
         const svg = d3.select(barChartRef.current);
@@ -36,7 +43,7 @@ function ExpenseChart({ expenses, currency }) {
 
         const width = 600;
         const height = 400;
-        const margin = { top: 20, right: 30, bottom: 60, left: 40 };
+        const margin = { top: 20, right: 30, bottom: 80, left: 60 };
 
         const x = d3.scaleBand()
             .domain(expenses.map(d => d.date))
@@ -131,7 +138,7 @@ function ExpenseChart({ expenses, currency }) {
 
         const width = 600;
         const height = 400;
-        const margin = { top: 20, right: 30, bottom: 40, left: 40 };
+        const margin = { top: 20, right: 30, bottom: 60, left: 60 };
 
         const monthlyData = d3.rollup(
             expenses,
@@ -151,24 +158,64 @@ function ExpenseChart({ expenses, currency }) {
 
         svg.attr("viewBox", [0, 0, width, height]);
 
+        const gradient = svg.append("defs")
+            .append("linearGradient")
+            .attr("id", "bar-gradient")
+            .attr("gradientUnits", "userSpaceOnUse")
+            .attr("x1", 0)
+            .attr("y1", y(0))
+            .attr("x2", 0)
+            .attr("y2", y(d3.max(monthlyData.values())));
+
+        gradient.append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", "#4CAF50");
+
+        gradient.append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", "#2196F3");
+
         svg.append("g")
-            .attr("fill", "steelblue")
             .selectAll("rect")
             .data(monthlyData)
             .join("rect")
             .attr("x", ([month]) => x(month))
             .attr("y", ([, amount]) => y(amount))
             .attr("height", ([, amount]) => y(0) - y(amount))
-            .attr("width", x.bandwidth());
+            .attr("width", x.bandwidth())
+            .attr("fill", "url(#bar-gradient)")
+            .attr("rx", 5)
+            .attr("ry", 5)
+            .on("mouseover", function (event, d) {
+                d3.select(this).attr("opacity", 0.8);
+                svg.append("text")
+                    .attr("class", "tooltip")
+                    .attr("x", x(d[0]) + x.bandwidth() / 2)
+                    .attr("y", y(d[1]) - 5)
+                    .attr("text-anchor", "middle")
+                    .text(`${currencySymbol}${d[1].toFixed(2)}`);
+            })
+            .on("mouseout", function () {
+                d3.select(this).attr("opacity", 1);
+                svg.select(".tooltip").remove();
+            });
 
         svg.append("g")
             .call(g => g
                 .attr("transform", `translate(0,${height - margin.bottom})`)
-                .call(d3.axisBottom(x).tickSizeOuter(0)));
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-65)"));
 
         svg.append("g")
             .attr("transform", `translate(${margin.left},0)`)
-            .call(d3.axisLeft(y));
+            .call(d3.axisLeft(y)
+                .ticks(5)
+                .tickFormat(d => `${currencySymbol}${d}`)
+            );
 
         svg.append("text")
             .attr("x", width / 2)
@@ -181,14 +228,14 @@ function ExpenseChart({ expenses, currency }) {
             .attr("x", -height / 2)
             .attr("y", 15)
             .attr("text-anchor", "middle")
-            .text("Total Amount ($)");
+            .text(`Total Amount (${currencySymbol})`);
     };
 
-    const createCategoryPieChart = () => {
+    const createCategoryPieChart = (data) => {
         const svg = d3.select(pieChartRef.current);
         svg.selectAll("*").remove();
 
-        const width = 300;
+        const width = 450;
         const height = 300;
         const radius = Math.min(width, height) / 2;
 
@@ -203,12 +250,12 @@ function ExpenseChart({ expenses, currency }) {
             .outerRadius(radius);
 
         const categoryData = Array.from(d3.rollup(
-            expenses,
+            data,
             v => d3.sum(v, d => d.amount),
             d => d.category
         ));
 
-        svg.attr("viewBox", [0, 0, width, height]);
+        svg.attr("viewBox", [0, -15, width + 30, height + 30]);
 
         const g = svg.append("g")
             .attr("transform", `translate(${width / 2},${height / 2})`);
@@ -276,13 +323,12 @@ function ExpenseChart({ expenses, currency }) {
                 svg.select(".hover-card").remove();
             });
 
-        // Legend
         const legendG = svg.append("g")
-            .attr("transform", `translate(${width - 100}, ${height - 20})`);
+            .attr("transform", `translate(${width - 160}, ${height - 20})`);
 
         categoryData.forEach((category, index) => {
             const legendRow = legendG.append("g")
-                .attr("transform", `translate(0, ${-index * 20})`);
+                .attr("transform", `translate(100, ${-index * 20})`);
 
             legendRow.append("rect")
                 .attr("width", 10)
@@ -291,9 +337,9 @@ function ExpenseChart({ expenses, currency }) {
 
             legendRow.append("text")
                 .attr("x", 15)
-                .attr("y", 10)
+                .attr("y", 7)
                 .text(category[0])
-                .style("font-size", "12px")
+                .style("font-size", "10px")
                 .attr("text-anchor", "start")
                 .style("alignment-baseline", "middle");
         });
@@ -321,7 +367,9 @@ function ExpenseChart({ expenses, currency }) {
                 <svg ref={barChartRef} style={{ width: '100%', height: 'auto', minHeight: '300px' }}></svg>
             </Box>
             <Typography variant="h6" gutterBottom>Expenses by Category</Typography>
-            <svg ref={pieChartRef} style={{ width: '400px', height: 'auto' }}></svg>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                <svg ref={pieChartRef} style={{ width: '500px', height: 'auto' }}></svg>
+            </Box>
         </Box>
     );
 }

@@ -7,8 +7,7 @@ const currencySymbols = {
     USD: '$',
     EUR: '€',
     GBP: '£',
-    JPY: '¥',
-    INR: '₹'
+    JPY: '¥'
 };
 
 function ExpenseAnalysis({ expenses, budget, currency }) {
@@ -32,20 +31,20 @@ function ExpenseAnalysis({ expenses, budget, currency }) {
         return (dailyAverage * 30).toFixed(2);
     }
 
-    const predictCategoryExpenses = () => {
-        const predictions = {};
-        for (const [category, total] of Object.entries(categoryTotals)) {
-            const categoryExpenses = expenses.filter(e => e.category === category);
-            const categoryDateRange = categoryExpenses.length > 1
-                ? (new Date(categoryExpenses[categoryExpenses.length - 1].date) - new Date(categoryExpenses[0].date)) / (24 * 60 * 60 * 1000)
-                : 1;
-            const dailyAverage = total / categoryDateRange;
-            predictions[category] = (dailyAverage * 30).toFixed(2);
-        }
-        return predictions;
-    }
+    // const predictCategoryExpenses = () => {
+    //     const predictions = {};
+    //     for (const [category, total] of Object.entries(categoryTotals)) {
+    //         const categoryExpenses = expenses.filter(e => e.category === category);
+    //         const categoryDateRange = categoryExpenses.length > 1
+    //             ? (new Date(categoryExpenses[categoryExpenses.length - 1].date) - new Date(categoryExpenses[0].date)) / (24 * 60 * 60 * 1000)
+    //             : 1;
+    //         const dailyAverage = total / categoryDateRange;
+    //         predictions[category] = (dailyAverage * 30).toFixed(2);
+    //     }
+    //     return predictions;
+    // }
 
-    const categoryPredictions = predictCategoryExpenses();
+    // const categoryPredictions = predictCategoryExpenses();
 
     const currentMonthExpenses = expenses.filter(expense => {
         const expenseDate = new Date(expense.date);
@@ -54,7 +53,7 @@ function ExpenseAnalysis({ expenses, budget, currency }) {
             expenseDate.getFullYear() === currentDate.getFullYear();
     }).reduce((sum, expense) => sum + expense.amount, 0);
 
-    const budgetProgress = budget ? (currentMonthExpenses / budget) * 100 : 0;
+    // const budgetProgress = budget ? (currentMonthExpenses / budget) * 100 : 0;
 
     return (
         <Box sx={{ mb: 2 }}>

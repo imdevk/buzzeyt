@@ -70,7 +70,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppBar position="static" color="primary" elevation={0}>
+      <AppBar position="static" color="primary" elevation={0} sx={{ padding: '0' }}>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Typography variant="h6" component="div">
             Expense Tracker

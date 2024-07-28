@@ -15,8 +15,7 @@ const currencySymbols = {
     USD: '$',
     EUR: '€',
     GBP: '£',
-    JPY: '¥',
-    INR: '₹'
+    JPY: '¥'
 };
 
 function ExpenseList({ expenses, onDeleteExpense, onEditExpense, currency }) {
