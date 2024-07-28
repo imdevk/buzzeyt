@@ -61,7 +61,7 @@ function ExpenseAnalysis({ expenses, budget, currency }) {
             <Typography>Total Expenses: {currencySymbol}{totalExpenses.toFixed(2)}</Typography>
             <Typography>Average Expense: {currencySymbol}{averageExpense.toFixed(2)}</Typography>
             <Typography>Top Spending Category: {topCategory ? `${topCategory[0]} (${currencySymbol}${topCategory[1].toFixed(2)})` : 'N/A'}</Typography>
-            <Typography>Predicted Monthly Expense: {currencySymbol}{predictMonthlyExpense()}</Typography>
+            {/* <Typography>Predicted Monthly Expense: {currencySymbol}{predictMonthlyExpense()}</Typography> */}
 
             <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>Budget Tracking</Typography>
             <Typography>Overall Monthly Budget: {currencySymbol}{budget.overall.toFixed(2)}</Typography>
